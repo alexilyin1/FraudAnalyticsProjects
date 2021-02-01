@@ -1,5 +1,39 @@
 # Project 1 - Fraud Detection algorithms developed for the New York Property dataset
 
+## File Directory
+
+```
+Project1
+│   README.md
+│
+└───data_cleaning
+│   │   README.md
+│   │   data_cleaning.html
+|   |   data_cleaning.ipynb
+│
+└───final_results
+│   │   README.md
+│   │   final_results.html
+|   |   final_results.ipynb
+│   │
+│   └───final_results_files
+│
+└───model1
+│   │   README.md
+│   │   model1.html
+|   |   model1.ipynb
+│   │
+│   └───model1_files
+│
+└───model2
+│   │   README.md
+│   │   model2.html
+|   |   model2.ipynb
+│   │
+│   └───model2_files
+
+```
+
 
 ## Background
 The dataset for this fraud detection project was a publically available dataset of New York property valuations from 2010/2011, available through the New York Department of Finance. In total, the dataset contains valuations for 1,070,994 properties (dataset not included for size reasons). The dataset contained 32 features. 
