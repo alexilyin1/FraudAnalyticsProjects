@@ -31,7 +31,7 @@ Project1
 
 
 ## Background
-The dataset for this fraud detection project was a publically available dataset of New York property valuations from 2010/2011, available through the New York Department of Finance. In total, the dataset contains valuations for 1,070,994 properties (dataset not included for size reasons). The dataset contained 32 features. 
+The dataset for this fraud detection was a dataset 
 
 
 ## The Plan
