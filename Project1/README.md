@@ -15,8 +15,8 @@ In order to accurately catch anomalies in this dataset, the following plan was d
 
 
 ### Step 1 - Exploratory Analysis 
-[Numeric Variable Summary](imgs/data_summary.png)
-[Character Variable Summary](imgs/data_summary2.png)
+![Numeric Variable Summary](imgs/data_summary.png)
+![Character Variable Summary](imgs/data_summary2.png)
 
 The two screenshots above show the results of a summary function applied to the dataset:
 ```
