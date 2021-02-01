@@ -59,8 +59,8 @@ def get_summary(dat):
 
 After creating the summary tables above, all the variables in the dataset were visualized using the 'seaborn' package. In the interest of document length, only a count plot of the 'BLOCK' variable and the distribution of the 'LTFRONT' or lot frontage variable are included:
 
-[BLOCK](imgs/block_count_plot.png)
-[LTFRONT](imgs/LTFRONT.png)
+![BLOCK](imgs/block_count_plot.png)
+![LTFRONT](imgs/LTFRONT.png)
 
 Based on the distributions of the variables visualized, initial data transformations were applied. For example, and numerical variable that was found to be skewed could be 'adjusted' using a log transformation in order to have the variable's distribution more closely follow the normal distribution. This is one possible way to deal with outliers in a dataset. 
 
@@ -94,17 +94,17 @@ After the data cleaning process, new variables could be created to actually comp
 
 Using these three variables, an additional nine variables were created on the basis of the FULLVAL, AVLAND and AVTOT variables. These three existing variables were normalized by the three new variables above. For each variable, we now had variables for price per volume/square foot. The next step in the variable creation process was to combine these normalized variables with different property identifiers:
 
-[Expert Vars](imgs/expert_vars.png)
+![Expert Vars](imgs/expert_vars.png)
 
 Zip5 and Zip3 represent the full zipcode and the first 3 digits of the zipcode, respectively (3 digits chosen to give a wider area of properties). Taxclass refers to the NY tax class each property belongs in, Boro refers to the borough a property is located in and All is a grouping of the above variables. After applying models to these 45 variables, the expected result is that outliers (fraudulent records) would be identified based on their outlier status with respect to the distribution of these new variables. Summary stats for the new variables were:
 
-[Expert Vars Stats](imgs/expert_vars_summary.png)
+![Expert Vars Stats](imgs/expert_vars_summary.png)
 
 ### Step 4 - Feature Selection 
 
 Before applying any models, feature selection was needed to select the most important features from the set above. However, with so many variables, the issue of multicollinearity appears. This is an issue in statistical modeling, as relationship between a feature and the outcome variable could be hidden in the correlation between two variables. To find any multicollinearity, a correlation matrix was created:
 
-[Correlation Matrix)(imgs/corr_matrix.png)
+![Correlation Matrix)(imgs/corr_matrix.png)
 
 With many of the new variables correlated, Principal Component Analysis is a possible dimensionality reduction algorithm that can be applied in order to reduce the complexity of our feature set and reduce multicollinearity that exists. PCA can help us create linear combinations of the features created, with new combinations created orthogonal to each other. However, before applying the PCA algorithm, each variable should be scaled to increase the validity of the PCA results. 
 
@@ -134,12 +134,12 @@ With two scores not available, one from the heuristic Euclidean distance model a
 
 Below are distributions for the two model scores in their respective order:
 
-[Heuristic Model](imgs/model1_results.png)
-[Autoencoder Model](imgs/model2_results.png)
+![Heuristic Model](imgs/model1_results.png)
+![Autoencoder Model](imgs/model2_results.png)
 
 Here are the results of the extreme quantile binning approach:
 
-[EQB Model](imgs/eqb_results.png)
+![EQB Model](imgs/eqb_results.png)
 
 We can explore the top 10 results from each score to find validate them directly based on our knowledge of the New York Housing Dataset
 
