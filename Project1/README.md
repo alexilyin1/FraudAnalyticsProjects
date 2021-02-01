@@ -8,11 +8,12 @@ The dataset for this fraud detection project was a publically available dataset 
 ## The Plan
 In order to accurately catch anomalies in this dataset, the following plan was determined
 1. Complete exploratory analysis of the dataset
-2. Perform the necessary data cleaning tasks
+2. Using the results of the exploratory analysis, determine data cleaning tasks that should be completed 
+3. Create custom variables for statistical models 
 3. Design two models - a heuristic model using principal components of the feature variables and an autoencoder trained on the full dataset. A "fraud score" would be developed from the results of these two models to find valuation record that could be fraudulent. 
 
 
-## Step 1 - Exploratory Analysis 
+### Step 1 - Exploratory Analysis 
 [Numeric Variable Summary](imgs/data_summary.png)
 [Character Variable Summary](imgs/data_summary2.png)
 
@@ -54,3 +55,24 @@ def get_summary(dat):
 
     return pd.concat([numeric_df, chars_df], ignore_index=True)
 ```
+
+After creating the summary tables above, all the variables in the dataset were visualized using the 'seaborn' package. In the interest of document length, only a count plot of the 'BLOCK' variable and the distribution of the 'LTFRONT' or lot frontage variable are included:
+
+[BLOCK](imgs/block_count_plot.png)
+[LTFRONT](imgs/LTFRONT.png)
+
+Based on the distributions of the variables visualized, initial data transformations were applied. For example, and numerical variable that was found to be skewed could be 'adjusted' using a log transformation in order to have the variable's distribution more closely follow the normal distribution. This is one possible way to deal with outliers in a dataset. 
+
+### Step 2 - Data Cleaning
+
+As mentioned above, exploratory analysis reveals any variables in our dataset that may have missing values that need to be filled in, or are skewed and could require some kind of transformation. The summary table above shows that the following variables would need to be adjusted for missing values:
+
+* ZIP - zip code
+* FULLVAL - full market value
+* AVLAND - final market value of land
+* AVTOT - total market value of land
+* STORIES - number of stories
+* LTFRONT - lot frontage
+* LTDEPTH - lot depth
+* BLDFRONT - building frontage
+* BLDDEPTH - building depth
