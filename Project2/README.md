@@ -1,9 +1,9 @@
-# Project 1 - Fraud Detection algorithms developed for the New York Property dataset
+# Project 2 - Fraud Detection algorithms developed for a dataset of credit card transactions
 
 ## File Directory
 
 ```
-Project1
+Project2
 │   README.md
 │
 └───models
@@ -31,7 +31,7 @@ Project1
 
 
 ## Background
-The dataset for this fraud detection was a dataset 
+The dataset for this fraud detection project was a dataset of real-world credit card transactions made in the year 2010. In total, 96,753 transactions were included with 9 columns. The final column identified whether or not the transaction was found to be fraudulent. Other columns included the transaction amount, geographic transaction identifiers such as State and Zip, as well as the transaction number. The goal of this fraud detection assignment is to build an optimal model for deployment as a real time fraud detection algorithm. This means, as transactions are happening in real time, a trained model should be able to detect fraudulent transactions and prevent them. 
 
 
 ## The Plan
@@ -39,13 +39,13 @@ In order to accurately catch anomalies in this dataset, the following plan was d
 1. Complete exploratory analysis of the dataset
 2. Using the results of the exploratory analysis, determine data cleaning tasks that should be completed 
 3. Create custom variables for statistical models 
-4. Select a final feature set - dimensionality reduction
-5. Design two models - a heuristic model using principal components of the feature variables and an autoencoder trained on the full dataset. A "fraud score" would be developed from the results of these two models to find valuation record that could be fraudulent. 
+4. Select a final feature set
+5. Design a set of classification models that would be able to detect future fraudulent transactions in real time
 
 
 ### Step 1 - Exploratory Analysis 
-![Numeric Variable Summary](imgs/data_summary.png)
-![Character Variable Summary](imgs/data_summary2.png)
+![Numeric Variable Summary](imgs/summary_amount.png)
+![Character Variable Summary](imgs/summary_char.png)
 
 The two screenshots above show the results of a summary function applied to the dataset:
 ```
@@ -86,50 +86,45 @@ def get_summary(dat):
     return pd.concat([numeric_df, chars_df], ignore_index=True)
 ```
 
-After creating the summary tables above, all the variables in the dataset were visualized using the 'seaborn' package. In the interest of document length, only a count plot of the 'BLOCK' variable and the distribution of the 'LTFRONT' or lot frontage variable are included:
+After creating the summary tables above, all the variables in the dataset were visualized using the 'seaborn' package. In the interest of document length, a count plot of the 'Merchstate' variable as well as a distribution of transaction amount are included below:
 
-![BLOCK](imgs/block_count_plot.png)
-![LTFRONT](imgs/LTFRONT.png)
+![Amount](imgs/amount_dist.png)
+![Merchant States](imgs/merch_states.png)
 
-Based on the distributions of the variables visualized, initial data transformations were applied. For example, and numerical variable that was found to be skewed could be 'adjusted' using a log transformation in order to have the variable's distribution more closely follow the normal distribution. This is one possible way to deal with outliers in a dataset. 
+Additionally, the 'fraud' outcome variable was used to observe when and where fraud is more likely to occur. To accomplish this, 'Day of the Week' and 'State' were used to show where fraud occurred the most. This produced interesting results that would drive the rest of our analysis:
+
+![Fraud by Day](imgs/fraud_day.png)
+![Fraud by State](imgs/fraud_state.png)
 
 ### Step 2 - Data Cleaning
 
-As mentioned above, exploratory analysis reveals any variables in our dataset that may have missing values that need to be filled in, or are skewed and could require some kind of transformation. The summary table above shows that the following variables would need to be adjusted for missing values:
+Upon completion of an initial data exploration, it was found that three of the possible independent variables (transaction merchant identification number, state and zip) contained missing values. Since these variables are categorical, thinking outside of the box was required to fill in the missing values. 
 
-* ZIP - zip code
-* FULLVAL - full market value
-* AVLAND - final market value of land
-* AVTOT - total market value of land
-* STORIES - number of stories
-* LTFRONT - lot frontage
-* LTDEPTH - lot depth
-* BLDFRONT - building frontage
-* BLDDEPTH - building depth
+The first variable filled in was merchant number. A three-phased approach was used so all missing values could be filled in - first, the column 'Merchant description' was aggregated and the most common matching merchant number for the missing record's merchant description was used. For the remaining missing values, the most common merchant numbers by State and by Zip were used in a similar fashion. 
 
-While the approach to replacing NULL/missing values for numerical features can be as straightforward as using the mean of a column, missing values for character variables requires some more thought. I will directly address the strategy for filling in values for the ZIP and FULLVAL columns. 
-
-To fill in the ZIP column (treated as a string), two additional variables were used that are closely related to ZIP in their relation to a properties' geography: 'BOROUGH' and 'BLOCK'. For each missing value, the mode of the group  a record is in would replace the missing value. Since BOROUGH and BLOCK represent the location of a property, it would make sense that the ZIP would follow those two features.
-
-To fill in the FULLVAL column, BOROUGH and newly filled in ZIP variable were used to fill in missing values. Similarly to the above approach, for each combination of BOROUGH and ZIP, the mean was found and missing values of FULLVAL were filled in based on the group they belonged in. 
+To fill in merchant state and zip, other geographical identifiers could be used to replace missing values. For example, to fill in merchant state, each record was aggregated by State-Zip and the most common values were used to fill in missing values. Any remaining values were filled in by merchant description and merchant number. 
 
 ### Step 3 - Variable Creation
 
-After the data cleaning process, new variables could be created to actually complete the fraud detection. While the original dataset provided a fair amount of features, it would be beneifical to have a wide range of features to make the final feature selection process more in depth. Some examples of variables that were created include:
+After filling in missing values in the dataset, the next step was to create a set of candidate dependent variables that could be used in the model building process. Again, with not many variables available, creativity was needed for creation of a decently sized set of variables. Variables were created based on the following criteria:
 
-* Lot area = lot front * lot depth
-* Building area = building front * building depth
-* Building volume = building area * stories
+* Variables related to a transaction's amount, i.e. Average/max/median/total transaction amount by this card/card at a particular merchant over the past 0/1/3/7 days
+* Variables related to frequency of transactions by each entity, i.e. Number of transactions with this card over the past 0/1/3/7 days
+* Variables related to the last time an entity made a purchase, i.e. the current date minus the date of the most recent transaction with the same card
+* Transaction velociy variables - Number of transactions with the same card/merchant over the past 1 day divided by the average daily transactions with the same card/merchant over the past 7/14/30 days
+* Transaction difference variables - Take the difference between the current transaction amount and the average/max/median transaction amount with the same card/merchant over the past 7/14/30 days
 
-Using these three variables, an additional nine variables were created on the basis of the FULLVAL, AVLAND and AVTOT variables. These three existing variables were normalized by the three new variables above. For each variable, we now had variables for price per volume/square foot. The next step in the variable creation process was to combine these normalized variables with different property identifiers:
-
-![Expert Vars](imgs/expert_vars.png)
-
-Zip5 and Zip3 represent the full zipcode and the first 3 digits of the zipcode, respectively (3 digits chosen to give a wider area of properties). Taxclass refers to the NY tax class each property belongs in, Boro refers to the borough a property is located in and All is a grouping of the above variables. After applying models to these 45 variables, the expected result is that outliers (fraudulent records) would be identified based on their outlier status with respect to the distribution of these new variables. Summary stats for the new variables were:
-
-![Expert Vars Stats](imgs/expert_vars_summary.png)
+The total set of variables was now 399. Obviously, all of these variables would not be used in the final feature set, but this set of variables had potential to inlcude variables that would be better at detecting fraud, compared to the original set of 9 variables. 
 
 ### Step 4 - Feature Selection 
+
+In order to select a final set of features, two feature selection methods would be applied. The first method would be using statistical tests and Fraud Detection Rate and sorting by those two metrics to find variables that served as good predictors of fraud. 
+
+The statistical test used was the Kolmogorov-Smirnov test, or the KS test for short. The KS test is a hypothesis test, with the null hypothesis being that two distributions are identical/the difference of their integrals is 0 and the alternative hypothesis is that the difference is not 0. With a binary classification task such as this one, for each possible dependent variable, two distributions would be created - one for fraudulent transactions and the other for non-fraudulent transactions. The KS test would then test to see if there was a statistically significant difference between the two distributions. If there is, the resulting KS score would be high, and it would tell us that the particular variable serves as a good predictor/differentiator between the two types of transactions. 
+
+Fraud Detection Rate (FDR) is a filter method that looks at a variables ability to detect fraud within the first 3% of a particular population, in this case the sample of credit card transactions. 
+
+After calculating both the KS score and FDR for each variable, the variables were sorted in a table with both scores in descending order. In order to come to a final feature set, the second feature selection method used was Recursive Feature Elimination (RFE). RFE uses a simple classifi
 
 Before applying any models, feature selection was needed to select the most important features from the set above. However, with so many variables, the issue of multicollinearity appears. This is an issue in statistical modeling, as relationship between a feature and the outcome variable could be hidden in the correlation between two variables. To find any multicollinearity, a correlation matrix was created:
 
