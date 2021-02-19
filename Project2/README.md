@@ -118,13 +118,19 @@ The total set of variables was now 399. Obviously, all of these variables would 
 
 ### Step 4 - Feature Selection 
 
+[variable selection](variable_selection)
+
 In order to select a final set of features, two feature selection methods would be applied. The first method would be using statistical tests and Fraud Detection Rate and sorting by those two metrics to find variables that served as good predictors of fraud. 
 
 The statistical test used was the Kolmogorov-Smirnov test, or the KS test for short. The KS test is a hypothesis test, with the null hypothesis being that two distributions are identical/the difference of their integrals is 0 and the alternative hypothesis is that the difference is not 0. With a binary classification task such as this one, for each possible dependent variable, two distributions would be created - one for fraudulent transactions and the other for non-fraudulent transactions. The KS test would then test to see if there was a statistically significant difference between the two distributions. If there is, the resulting KS score would be high, and it would tell us that the particular variable serves as a good predictor/differentiator between the two types of transactions. 
 
 Fraud Detection Rate (FDR) is a filter method that looks at a variables ability to detect fraud within the first 3% of a particular population, in this case the sample of credit card transactions. 
 
-After calculating both the KS score and FDR for each variable, the variables were sorted in a table with both scores in descending order. In order to come to a final feature set, the second feature selection method used was Recursive Feature Elimination (RFE). RFE uses a simple classifi
+After calculating both the KS score and FDR for each variable, the variables were sorted in a table with both scores in descending order. In order to come to a final feature set, the second feature selection method used was Recursive Feature Elimination (RFE). RFE uses a simple classification algorithm (in our case, logistic regression) to find the optimal subset in terms of a particular classification metric (we chose ROC-AUC). The algorithm starts with the full subset of training features and repeatedly removes features. We can then create a plot that graphs the # of features against the classification error metric to give us an idea of which subset of features is most optimal:
+
+![RFE Plot](imgs/rfe_graph.png)
+
+Additionally, Sklearn's RFECV function returns a "rferanking" variable that gives a ranking from 1 to the number of subsets tried. This makes it easy to chose our optimal feature subset. This feature selection algorithm was run on top 80 features and again with top 50 features, from which we chose our final 30 features. 
 
 Before applying any models, feature selection was needed to select the most important features from the set above. However, with so many variables, the issue of multicollinearity appears. This is an issue in statistical modeling, as relationship between a feature and the outcome variable could be hidden in the correlation between two variables. To find any multicollinearity, a correlation matrix was created:
 
