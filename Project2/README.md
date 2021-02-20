@@ -164,7 +164,7 @@ With each model, 5/10 fold (depending on the model/hyperparameters) Cross Valida
 
 For the logistic regression model, the two hyperparameters chosen for tuning were the regularization parameter as well as the regularization strength. Between the two regularization types (ridge and lasso), we chose ridge or L2 regularization. While both of these hyperparameters aim to reduce the complexity of our feature set, the main difference between the two kinds of regularization lies in the solution function used to solve the linear regression/sum of least squares equation. The solution plane for a regression using Lasso regularization is shaped in such a way that more of our coefficients are likely to reach 0. In this way, Lasso/L1 will give us a sparse solution to our linear regression. However, Ridge regularization gives us a larger set since less of the coefficients are likely to be zeroed out. We can see this in play in the below graphs, which show the solution sets for L1 and L2 regularization, respectively.
 
-![Regularization](imgs/regularization.jpeg)
+![Regularization](imgs/regularization.png)
 
 In the case of these graphs, the solution set is where the line intersects with the plane. As we can see in the L1 regularization graph, the solution only intersects in corners of the plane, meaning that some of our coefficients will be zero. 
 
