@@ -31,7 +31,7 @@ Project2
 
 
 ## Background
-The dataset for this fraud detection project was a dataset of real-world credit card transactions made in the year 2010. In total, 96,753 transactions were included with 9 columns. The final column identified whether or not the transaction was found to be fraudulent. Other columns included the transaction amount, geographic transaction identifiers such as State and Zip, as well as the transaction number. The goal of this fraud detection assignment is to build an optimal model for deployment as a real time fraud detection algorithm. This means, as transactions are happening in real time, a trained model should be able to detect fraudulent transactions and prevent them. 
+The dataset for this fraud detection project was a dataset of real-world credit card transactions made in the year 2010. In total, 96,753 transactions were included with 9 columns. The final column identified whether or not the transaction was found to be fraudulent. Other columns included the transaction amount, geographic transaction identifiers such as State and Zip, as well as the transaction number. The goal of this fraud detection assignment is to build an optimal model for deployment as a real time fraud detection algorithm. This means, as transactions are happening in real time, a trained model should be able to detect fraudulent transactions and prevent them. An important feature of this dataset was the date of the transaction - since we are dealing with transactions that happened over a particular time period and the goal is to deploy a model that will work real time, we want to create three sets of data - training, test and out of time data. When we split the data, it is important that the model is only using data from the past to detect fraud. The final OOT dataset will consist of the last two months of data and will serve as the validation dataset. Since it is the most recent set of transactions, it will be the most important for determining which model will work best in the real time fraud detection solution.
 
 
 ## The Plan
@@ -41,9 +41,13 @@ In order to accurately catch anomalies in this dataset, the following plan was d
 3. Create custom variables for statistical models 
 4. Select a final feature set
 5. Design a set of classification models that would be able to detect future fraudulent transactions in real time
-
+6. Evaluate the optimal model in terms of FDR and money saved by detecting fraud
 
 ### Step 1 - Exploratory Analysis 
+
+[Link to exploratory analysis code](variable_creation)
+
+
 ![Numeric Variable Summary](imgs/summary_amount.png)
 ![Character Variable Summary](imgs/summary_char.png)
 
@@ -98,6 +102,8 @@ Additionally, the 'fraud' outcome variable was used to observe when and where fr
 
 ### Step 2 - Data Cleaning
 
+[Link to data cleaning code](variable_creation)
+
 Upon completion of an initial data exploration, it was found that three of the possible independent variables (transaction merchant identification number, state and zip) contained missing values. Since these variables are categorical, thinking outside of the box was required to fill in the missing values. 
 
 The first variable filled in was merchant number. A three-phased approach was used so all missing values could be filled in - first, the column 'Merchant description' was aggregated and the most common matching merchant number for the missing record's merchant description was used. For the remaining missing values, the most common merchant numbers by State and by Zip were used in a similar fashion. 
@@ -105,6 +111,8 @@ The first variable filled in was merchant number. A three-phased approach was us
 To fill in merchant state and zip, other geographical identifiers could be used to replace missing values. For example, to fill in merchant state, each record was aggregated by State-Zip and the most common values were used to fill in missing values. Any remaining values were filled in by merchant description and merchant number. 
 
 ### Step 3 - Variable Creation
+
+[Link to variable creation code](variable_creation)
 
 After filling in missing values in the dataset, the next step was to create a set of candidate dependent variables that could be used in the model building process. Again, with not many variables available, creativity was needed for creation of a decently sized set of variables. Variables were created based on the following criteria:
 
@@ -132,56 +140,69 @@ After calculating both the KS score and FDR for each variable, the variables wer
 
 Additionally, Sklearn's RFECV function returns a "rferanking" variable that gives a ranking from 1 to the number of subsets tried. This makes it easy to chose our optimal feature subset. This feature selection algorithm was run on top 80 features and again with top 50 features, from which we chose our final 30 features. 
 
-Before applying any models, feature selection was needed to select the most important features from the set above. However, with so many variables, the issue of multicollinearity appears. This is an issue in statistical modeling, as relationship between a feature and the outcome variable could be hidden in the correlation between two variables. To find any multicollinearity, a correlation matrix was created:
 
-![Correlation Matrix)(imgs/corr_matrix.png)
 
-With many of the new variables correlated, Principal Component Analysis is a possible dimensionality reduction algorithm that can be applied in order to reduce the complexity of our feature set and reduce multicollinearity that exists. PCA can help us create linear combinations of the features created, with new combinations created orthogonal to each other. However, before applying the PCA algorithm, each variable should be scaled to increase the validity of the PCA results. 
+### Step 5 - Models
 
-The approach of PCA reduces correlation. After applying the PCA algorithm in sklearn, a scree plot can be used to determine with principal components to keep. The principal components to keep are determined by their respective explained variance. It is generally accepted that we want to keep components that combine to explain around ~90% of the variance in our data. The final step is to apply Z-score scaling to the remaining principal components. This will reduce the chances that the first principal component in our feature set will take up the most importance (due to it having the highest level of variance explained). 
+[Link to modeling code](models)
 
-What we are left with is a feature set of four principal components. While we have dratistically reduced the dimension of our dataset, what we are left with is a feature set that is uncorrelated and scaled. We can now begin applying models. 
+Once a final set of optimal features was selected, we could actually begin to create classification models. The goal of the models would be to correctly identify as many fraudulent transaction as possible, and to do so in real time. The set of models chosen was:
 
-### Step 5a - Heuristic Distance Measure
+* Logistic Regression
+* Support Vector Machine
+* Random Forest
+* XGBoost
+* Neural Network
 
-This first model is a heuristic model that will be applied to the remaining four features. For each of the records in the dataset, a score would be determined by finding the distance of the records' feature values from the origin point of that variable on a 2 dimensional plane (in other words, the euclidean distance of each feature). With our features already undergoing scaling, it was guaranteed that any irregularities in dimensions could be avoided. This unsupervised heuristic approach would tell us which records appear to be outliers. With one of the steps in our feature selection process involving standardizing the feature variables  Since there was not an actual model being built, we could simple apply this score to the whole dataset. The score was evaluated this way - if a variable had a score of 500 - this meant it was 500 standard deviations away from the mean - this would definitely mean that the record could be fraudulent.
+The reason we chose such a wide range of models to test is due to the differences in their complexity. While a neural network could be used to solve most machine learning tasks, its complexity, long compilation times and difficult interpretability. If a problem can be solved using a less complex model, there is no reason to use such a complicated model. For this reason, we started with one of the most simple classification models (logistic regression) and moved up in complexity until we reached neural networks. 
 
-### Step 5b - Autoencoder
+With each model, 5/10 fold (depending on the model/hyperparameters) Cross Validation was used to test different sets of hyperparameters. The tables below will show the different hyperparameter sets that were tried, as well as the classification metric achieved with each subset. Since this is a fraud detection problem, we went with Fraud Detection Rate at 3% of the population. We also divided our data into three subsets - Training, Testing and OOT, and the tables below will show the FDR each susbet of hyperparameters achieved in the three subsets of data. As mentioned above, the OOT data contains the last 2 months of data when sorted chronologically, this will be the most important dataset to determining the optimal model. The optimal model is highlighted in yellow.
 
-An autoencoder is a type of Neural Net that converts its input to a compressed latent representation. The version of the input variables is then recreated and the distance between the resulting output vector and the input vector would be the basis of the 2nd model's results. In a sense, what the autoencoder is doing is training on the variance of the input data to recreate it. The difference between what the autoencoder predicts as the input vector and what the actual input vector is could serve as an outlier detection value. This value can be referred to as a reconstruction error. With the nature fo this model, it would be beneficial to train on the WHOLE dataset, rather than splitting it up into training/test/validation sets. The parameters of the final model were:
+#### Logistic Regression
 
-* Keras neural net
-* reLu activation
-* 25 epochs 
+![Logistic Regression](imgs/logistic_regression.png)
 
-The final score, or the reconstruction error, was calculated using the commonly used vector distance measure, or the Minkowski score. The reasoning for choosing such a method was, since the first method used a linear distance measure, the autoencoder would attempt to capture non-linearities among our feautres. 
+For the logistic regression model, the two hyperparameters chosen for tuning were the regularization parameter as well as the regularization strength. Between the two regularization types (ridge and lasso), we chose ridge or L2 regularization. While both of these hyperparameters aim to reduce the complexity of our feature set, the main difference between the two kinds of regularization lies in the solution function used to solve the linear regression/sum of least squares equation. The solution plane for a regression using Lasso regularization is shaped in such a way that more of our coefficients are likely to reach 0. In this way, Lasso/L1 will give us a sparse solution to our linear regression. However, Ridge regularization gives us a larger set since less of the coefficients are likely to be zeroed out. We can see this in play in the below graphs, which show the solution sets for L1 and L2 regularization, respectively.
 
-### Step 5c - Final Score 
+![Regularization](imgs/regularization.jpeg)
 
-With two scores not available, one from the heuristic Euclidean distance model and the other from the autoencoder's reconstruction error, we could combine them directly in order to get a final score. An approach called Extreme Quantile Binning, in which scores from each method are "binned" and are ordered based on their "rank" of score in an ascending order. The number of bins used equaled the number of records in the data, and the resulting score was an average of both of the ranks. Finding the average of rank ordered values would give us a way to evaluate the results of these unsupervised algorithms.
+In the case of these graphs, the solution set is where the line intersects with the plane. As we can see in the L1 regularization graph, the solution only intersects in corners of the plane, meaning that some of our coefficients will be zero. 
 
-### Step 6 - Results 
+Elasticnet was also tested, as it combined L1 and L2 regularization (although it is rarely used).
 
-Below are distributions for the two model scores in their respective order:
+#### SVM
 
-![Heuristic Model](imgs/model1_results.png)
-![Autoencoder Model](imgs/model2_results.png)
+![SVM](imgs/svm.png)
 
-Here are the results of the extreme quantile binning approach:
+SVM hyperparameters were the regularization type, regularization strength, as well as the degree the decision boundary is modeled in. The degree of the solution kernel tells us to what dimension degree the SVM model will attempt to fit our data i.e. a 3rd degree means that the SVM used a kernel function to fit our data in a 3-Dimensional space.
 
-![EQB Model](imgs/eqb_results.png)
+#### Random Forest and XGBoost 
 
-We can explore the top 10 results from each score to find validate them directly based on our knowledge of the New York Housing Dataset
+![Random Forest](imgs/rf.png)
 
-For example, from model 1, we can take some of the housing records for which high fraud scores were found. The method we'll use for validation is whether or not the value is 3 standard deviations outside of the mean of a particular feature.
+![XGBoost](imgs/xgb1.png)
+![XGBoost](imgs/xgb2.png)
 
-* Building 917942 - The value for FULLVAL is an outlier
-* Building 1067360 - The value for LTFRONT and LTDEPTH are both outliers
-etc...
+The next two models were tree based - Random Forest and XGBoost. The main difference between RFs and Xgboost lies in the way these models fit the data and form an optimal solution. While both are ensemble learning models (meaning that they combine a collection of models, decision trees, to make a classification decision), RFs use the bagging approach to learning while XGBoost uses the boosting approach (as suggested by the name). 
 
-After listing out the top 10 most "fraudulent" records found in each model, we can compare the results to the quantile binning approach. Using this approach, we find that the top 10 most fraudulent records from the quantile binning approach directly match the top 10 most fraudulent records from the heuristic euclidean distance model. 
+A random forest model uses a collection of decision trees, with each tree taking a random sample of features and a random sample of training data. The reason bagging is used is to reduce the variance of the model and prevent overfitting - ensemble models are notorious for being overcomplex. The three hyperparameters chosen were 'max features' (a function that determines the amount of features used for training), the number of trees in the ensemble, and the maximum depth of each tree.
 
-It was important to add the last step to this project - validating the results of the models. Since unsupervised models were applied to the results of a PCA algorithm, the results of the models could not be used at face value. It was necessary to actually examine some of the most fraudulent records to see if their actual feature values were outliers.
+A XGBoost model starts with a 'weak learner' (a simple and small decision tree) and builds subsequent weak learners by learning from the errors of the previous tree. The final learner in the ensemble model will have learned from all the susbequent trees. The hyperparameters chosen were weights, number of trees, and the maximum depth of each tree. 
 
-Finally, these results can be presented to members of NY Housing/Tax committees, to show fraudulent housing records as well as characteristics of records found to be fraudulent. 
+#### Neural Network
+
+![NN1](imgs/nn1.png)
+![NN2](imgs/nn2.png)
+
+The final model tested was a neural network. The hyperparameters chosen were layers and nodes. All models were trained using the ReLU activiation function and the number of nodes. 
+
+After comparing the results of these models, it was found that the XGBoost model provides the optimal results. 
+
+### Step 6 - XGBoost model evaluation
+
+Since our data is ordered chronologically and we hope to deploy this model to detect fraud in real time, the XGBoost model underwent a final evaluation using the Out of Time dataset created using the final 2 months of data. In that subset, there were 179 total fraudulent transactions out of 12427. In the OOT dataset, the XGBoost model was able to pick up 57% of all fraudulent transactions in the first 20% of that subset's population. In order to give a result, the fraud detection rate was quantified in terms of money saved by detecting fraud. 
+
+![FDR Plot](imgs/FDR_plot.png)
+
+For each fraud caught, it was assumed the $2,000 would be saved and $50 would be lost of every 'false positive' transaction. Using the FDR in the OOT dataset, the savings were calculated over time by subtracting loses for false positives from the total savings from detecting fraud. The plot above shows fraud savings as the blue line, with the orange line showing how many false positives were detected. The green line shows the overall savings as the difference described above. The final result would be presented as a cutoff point for percentage of a fraudulent transactions to detect. The reason we're picking a cutoff is that at some point it becomes more risky to try and detect fraudulent transactions, as that naturally increases the cumulative sum of losses accrued for falsely identifying a fraudulent transaction, and also runs the risk of losing customers who are frustrated with getting accused of posting fraudulent transactions. Using the graph above, the cutoff was set at 5% of the population. This provides us the best margin and balance between false positives and fraud savings. 
 
