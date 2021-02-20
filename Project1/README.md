@@ -49,6 +49,7 @@ In order to accurately catch anomalies in this dataset, the following plan was d
 
 
 ### Step 1 - Exploratory Analysis 
+
 ![Numeric Variable Summary](imgs/data_summary.png)
 ![Character Variable Summary](imgs/data_summary2.png)
 
@@ -100,6 +101,8 @@ Based on the distributions of the variables visualized, initial data transformat
 
 ### Step 2 - Data Cleaning
 
+[Data cleaning code](data_cleaning)
+
 As mentioned above, exploratory analysis reveals any variables in our dataset that may have missing values that need to be filled in, or are skewed and could require some kind of transformation. The summary table above shows that the following variables would need to be adjusted for missing values:
 
 * ZIP - zip code
@@ -148,9 +151,13 @@ What we are left with is a feature set of four principal components. While we ha
 
 ### Step 5a - Heuristic Distance Measure
 
+[Model 1 code](model1)
+
 This first model is a heuristic model that will be applied to the remaining four features. For each of the records in the dataset, a score would be determined by finding the distance of the records' feature values from the origin point of that variable on a 2 dimensional plane (in other words, the euclidean distance of each feature). With our features already undergoing scaling, it was guaranteed that any irregularities in dimensions could be avoided. This unsupervised heuristic approach would tell us which records appear to be outliers. With one of the steps in our feature selection process involving standardizing the feature variables  Since there was not an actual model being built, we could simple apply this score to the whole dataset. The score was evaluated this way - if a variable had a score of 500 - this meant it was 500 standard deviations away from the mean - this would definitely mean that the record could be fraudulent.
 
 ### Step 5b - Autoencoder
+
+[Model 2 code](model2)
 
 An autoencoder is a type of Neural Net that converts its input to a compressed latent representation. The version of the input variables is then recreated and the distance between the resulting output vector and the input vector would be the basis of the 2nd model's results. In a sense, what the autoencoder is doing is training on the variance of the input data to recreate it. The difference between what the autoencoder predicts as the input vector and what the actual input vector is could serve as an outlier detection value. This value can be referred to as a reconstruction error. With the nature fo this model, it would be beneficial to train on the WHOLE dataset, rather than splitting it up into training/test/validation sets. The parameters of the final model were:
 
@@ -165,6 +172,8 @@ The final score, or the reconstruction error, was calculated using the commonly 
 With two scores not available, one from the heuristic Euclidean distance model and the other from the autoencoder's reconstruction error, we could combine them directly in order to get a final score. An approach called Extreme Quantile Binning, in which scores from each method are "binned" and are ordered based on their "rank" of score in an ascending order. The number of bins used equaled the number of records in the data, and the resulting score was an average of both of the ranks. Finding the average of rank ordered values would give us a way to evaluate the results of these unsupervised algorithms.
 
 ### Step 6 - Results 
+
+[Final results](final_results)
 
 Below are distributions for the two model scores in their respective order:
 
